@@ -5,6 +5,7 @@ import  Navbar from "./components/Navbar";
 import  Login  from "./components/Login";
 import  Admin  from "./components/Admin";
 import { auth } from "./Firebase";
+import  Recuperar  from "./components/Recuperar";
 
 
 
@@ -31,6 +32,9 @@ function App() {
           </Route>
           <Route path="/admin">
             <Admin/>
+          </Route>
+          <Route path="/recuperar">
+            <Recuperar></Recuperar>
           </Route>
           <Route path="/">
             inicio

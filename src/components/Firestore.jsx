@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import moment from 'moment'
+import 'moment/locale/es'
 import {db} from '../Firebase'
 
 function Firestore(props) {
@@ -7,21 +9,82 @@ function Firestore(props) {
   const [tarea, setTarea] =useState('')
   const [modoEdicion, setModoEdicion] = useState(false)
   const [id, setId] =useState("")
+  const [ultimo, setUltimo] = useState("")
+  const [desactivar, setDesactivar] = useState(false)
 
   useEffect(()=>{
-    const obtenerDatos = async () =>{
-      try{
-          const data = await db.collection("Tareas").get()
-          const arrayData = data.docs.map(doc => ({id:doc.id , ...doc.data()}))
-          setListaTarea(arrayData)
-      }
-      catch(e){
-        console.log(e)
-      }
 
+    const obtenerDatos = async () =>{
+      try {
+
+        setDesactivar(true)
+
+        const data = await db.collection(props.user.uid)
+          .limit(3)
+          .orderBy('fecha')
+          .get()
+        const arrayData = data.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+
+        setUltimo(data.docs[data.docs.length - 1])
+
+        setListaTarea(arrayData)
+
+        const query = await db.collection(props.user.uid)
+          .limit(3)
+          .orderBy('fecha')
+          .startAfter(data.docs.length - 1)
+          .get()
+
+        if(query.empty){
+          console.log('no hay más documentos')
+          setDesactivar(true)
+        }else{
+          setDesactivar(false)
+        }
+        
+      } catch (error) {
+        console.log(error)
+      }
     }
     obtenerDatos()
-  },[])
+  },[props.user.uid])
+
+  const siguiente =async () =>{
+    setDesactivar(true)
+    
+    try {
+
+      const data = await db.collection(props.user.uid)
+      .limit(3)
+      .orderBy('fecha')
+      .startAfter(ultimo)
+      .get()
+
+      const arrayData = data.docs.map(doc => ({id:doc.id , ...doc.data()}))
+      setListaTarea([...listaTarea, ...arrayData])
+     
+      setUltimo(data.docs[data.docs.length - 1]) 
+      console.log(ultimo)
+      console.log(listaTarea)
+      console.log(arrayData)
+
+      const query = await db.collection(props.user.uid)
+      .limit(3)
+      .orderBy('fecha')
+      .startAfter(ultimo)
+      .get()
+
+      if(query.empty){
+        setDesactivar(true)
+      }
+      else{
+        setDesactivar(false)
+      }
+      
+    } catch (e) {
+      console.log(e)
+    }
+  }
 
   const agregarTarea = async (e) =>{
     e.preventDefault()
@@ -88,16 +151,16 @@ function Firestore(props) {
           <ul className="list-group">
             {
               listaTarea.map(item =>(
-                <li key={item.id} className="list-group-item ">{item.name} 
+                <li key={item.id} className="list-group-item ">{item.name} - {moment(item.fecha).format("LLL")}
                   <div className="d-md-flex justify-content-md-end">
                  <button onClick={()=> eliminarTarea(item.id)} className="btn btn-danger btn-sm me-md-2">Eliminar</button>
                  <button onClick={()=> activarEdicion(item)} className="btn btn-warning btn-sm">Editar</button>
                   </div> 
                  </li>
               ))               
-
             }
           </ul>
+          <button disabled={desactivar} onClick={()=>siguiente()} className="btn-info btn-block -mt-2 btn-sm"> Siguiente</button>
         </div>
         <div className="col-md-6">
           <h3 className="text-center">{modoEdicion ? "Editar tarea" : "Añadir tarea"}</h3>

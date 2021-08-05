@@ -115,7 +115,12 @@ const Login = (props) => {
                         <button type="button" onClick={()=> setEsRegistro(!esRegistro)} className="btn btn-info btn-sm btn-block mb-2">
                                 {esRegistro ? '¿ya tienes cuenta?' : '¿no tienes cuenta?'}
                         </button>
+                        
+                        
                         </div>
+                        {
+                            esRegistro ? null : (<button className="  btn btn-danger btn-sm  mb-2" type="button" onClick={()=>props.history.push("/recuperar")}>Recupera tu cuenta</button>)
+                        }
                     </form>
                         
                 </div>
